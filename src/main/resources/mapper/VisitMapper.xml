@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zww.dao.VisitMapper">
+  <resultMap id="BaseResultMap" type="com.zww.bean.Visit">
+    <id column="VisitID" jdbcType="INTEGER" property="visitid" />
+    <result column="VisitURL" jdbcType="VARCHAR" property="visiturl" />
+    <result column="VisitIP" jdbcType="VARCHAR" property="visitip" />
+    <result column="VisitCountry" jdbcType="VARCHAR" property="visitcountry" />
+    <result column="VisitProvince" jdbcType="VARCHAR" property="visitprovince" />
+    <result column="VisitCity" jdbcType="VARCHAR" property="visitcity" />
+    <result column="VisitHostName" jdbcType="VARCHAR" property="visithostname" />
+    <result column="VisitOS" jdbcType="VARCHAR" property="visitos" />
+    <result column="VisitTime" jdbcType="TIMESTAMP" property="visittime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    VisitID, VisitURL, VisitIP, VisitCountry, VisitProvince, VisitCity, VisitHostName, 
+    VisitOS, VisitTime
+  </sql>
+  
+  <!-- 查询所有访问信息 -->
+  <select id="selectByVisit" parameterType="com.zww.bean.Visit" resultMap="BaseResultMap">
+    select
+    VisitCountry, VisitProvince, VisitCity, VisitHostName, VisitTime
+    from visit
+    order by VisitTime desc
+    limit #{offset},#{limit}
+  </select>
+
+  <!-- 统计-国家 -->
+  <select id="visitCountryStatistic" parameterType="com.zww.bean.Visit" resultMap="BaseResultMap">
+    select VisitCountry,COUNT(1) as count
+    from visit
+    where VisitCountry != ''
+    GROUP BY VisitCountry
+  </select>
+
+  <!-- 统计-中国省份 -->
+  <select id="visitProvinceStatistic" parameterType="com.zww.bean.Visit" resultMap="BaseResultMap">
+    select VisitProvince,COUNT(1) as count
+    from visit
+    where VisitCountry = '中国' and VisitProvince != ''
+    GROUP BY VisitProvince
+  </select>
+
+  <!-- 总访问数 -->
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) from visit
+  </select>
+
+  <!-- 月访问数 -->
+  <select id="getMonthCount" resultType="java.lang.Integer">
+    <!-- 最近30天 -->
+    select count(1) from visit where VisitTime > DATE_SUB(CURDATE(),INTERVAL 30 DAY) and VisitTime <![CDATA[<]]> DATE(now())
+    <!-- 本月 -->
+    /*select count(1) from visit WHERE DATE_FORMAT(VisitTime, '%Y%m' ) = DATE_FORMAT( CURDATE( ) , '%Y%m' );*/
+  </select>
+
+  <!-- 周访问数 -->
+  <select id="getWeekCount" resultType="java.lang.Integer">
+    select count(1) from visit where VisitTime > DATE_SUB(CURDATE(),INTERVAL 7 DAY) and VisitTime <![CDATA[<]]> DATE(now())
+  </select>
+
+  <!-- 日访问数 -->
+  <select id="getDayCount" resultType="java.lang.Integer">
+    select count(1) from visit where VisitTime >= CURDATE()
+  </select>
+
+  <!-- 新增访问信息 -->
+  <insert id="insert" parameterType="com.zww.bean.Visit">
+    insert into visit (VisitURL, VisitIP, 
+      VisitCountry, VisitProvince, VisitCity, 
+      VisitHostName, VisitOS)
+    values (#{visiturl,jdbcType=VARCHAR}, #{visitip,jdbcType=VARCHAR}, 
+      #{visitcountry,jdbcType=VARCHAR}, #{visitprovince,jdbcType=VARCHAR}, #{visitcity,jdbcType=VARCHAR}, 
+      #{visithostname,jdbcType=VARCHAR}, #{visitos,jdbcType=VARCHAR})
+  </insert>
+  
+</mapper>
